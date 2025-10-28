@@ -3,7 +3,7 @@ from mcp.server.sse import SseServerTransport
 from mcp.types import Tool, TextContent
 from starlette.applications import Starlette
 from starlette.routing import Mount, Route
-from starlette.responses import Response
+from starlette.responses import Response, JSONResponse
 from starlette.requests import Request
 import subprocess
 import tempfile
@@ -201,7 +201,10 @@ async def download_pdf(request: Request):
     file_path = PDF_OUTPUT_DIR / filename
     
     if not file_path.exists():
-        return Response(content="File not found", status_code=404)
+        return JSONResponse(
+            content={"status": 404, "message": "not found"},
+            status_code=404
+        )
     
     pdf_content = file_path.read_bytes()
     
@@ -217,6 +220,18 @@ async def download_pdf(request: Request):
             "Content-Disposition": f'attachment; filename="{filename}"'
         }
     )
+
+
+async def send_404(send):
+    await send({
+        'type': 'http.response.start',
+        'status': 404,
+        'headers': [[b'content-type', b'application/json']],
+    })
+    await send({
+        'type': 'http.response.body',
+        'body': b'{"status": 404, "message": "not found"}',
+    })
 
 
 sse = SseServerTransport("/messages")
@@ -235,12 +250,16 @@ async def mcp_app(scope, receive, send):
                 )
         elif path == "/messages":
             await sse.handle_post_message(scope, receive, send)
+        else:
+            await send_404(send)
 
 
-app = Starlette(routes=[
-    Route("/download/{filename}", endpoint=download_pdf),
-    Mount("/", app=mcp_app)
-])
+app = Starlette(
+    routes=[
+        Route("/download/{filename}", endpoint=download_pdf),
+        Mount("/", app=mcp_app)
+    ]
+)
 
 
 if __name__ == "__main__":
