@@ -15,6 +15,16 @@ A Model Context Protocol (MCP) server that compiles LaTeX source code to PDF doc
 
 ### Using Docker (Recommended)
 
+#### Option 1: Pull from Docker Hub
+
+```bash
+docker run -p 8000:8000 pranavgnn/latex-mcp-server:latest
+```
+
+[Docker Hub Repository](https://hub.docker.com/repository/docker/pranavgnn/latex-mcp-server/general)
+
+#### Option 2: Build from Source
+
 1. Clone the repository:
 
    ```bash
