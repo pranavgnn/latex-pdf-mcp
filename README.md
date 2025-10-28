@@ -45,6 +45,36 @@ docker run -p 8000:8000 pranavgnn/latex-mcp-server:latest
 
 The server will be available at `http://localhost:8000`.
 
+## MCP Configuration
+
+To use this server with MCP-compatible clients (like VS Code extensions or other MCP clients), create a configuration file:
+
+### VS Code Configuration
+
+1. Create a `.vscode/mcp.json` file in your workspace:
+
+   ```json
+   {
+     "servers": {
+       "latex-pdf": {
+         "url": "http://localhost:8000/sse"
+       }
+     }
+   }
+   ```
+
+2. Ensure the server is running on port 8000 (as configured above)
+
+3. The MCP client will automatically discover and connect to the LaTeX compilation tool
+
+### Configuration Options
+
+- **Server Name**: `latex-pdf` (can be customized)
+- **URL**: `http://localhost:8000/sse` (SSE endpoint for MCP communication)
+- **Port**: Default is 8000, but can be changed in the Docker run command or app.py
+
+## Usage
+
 ### Local Installation
 
 1. Install system dependencies:
