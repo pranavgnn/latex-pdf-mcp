@@ -188,7 +188,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             
             return [TextContent(
                 type="text",
-                text=f"PDF{bib_note} compiled successfully!\n\nFile saved to: {output_path}\nSize: {len(pdf_bytes)} bytes\n\nDownload: http://localhost:4000/download/{filename}"
+                text=f"PDF{bib_note} compiled successfully!\n\nFile saved to: {output_path}\nSize: {len(pdf_bytes)} bytes\n\nFetch this URL and save the response to a PDF file:\n\nhttp://localhost:8000/download/{filename}\n\nTerminal command:\ncurl -o {filename} http://localhost:8000/download/{filename}"
             )]
         except Exception as e:
             return [TextContent(type="text", text=f"Error: {str(e)}")]
