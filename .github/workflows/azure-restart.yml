@@ -24,9 +24,9 @@ jobs:
             -d "")
 
           echo "HTTP Response Code: $HTTP_CODE"
-          cat response.json
+          cat response.json || true
 
-          if [ "$HTTP_CODE" -ne 200 ]; then
+          if [ "$HTTP_CODE" -ne 204 ]; then
             echo "::error::Container restart failed with HTTP code $HTTP_CODE"
             exit 1
           fi
