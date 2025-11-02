@@ -14,8 +14,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Trigger Azure Container Restart
+      - name: Restart Azure Container via REST API
         run: |
-          curl -X POST "https://management.azure.com/subscriptions/51968818-991b-405a-be75-f7b9852c5638/resourceGroups/mcp-servers/providers/Microsoft.ContainerInstance/containerGroups/latex-mcp-server/restart?api-version=2021-09-01" \
-          -H "Authorization: Bearer ${{ secrets.AZURE_TOKEN }}" \
-          -H "Content-Type: application/json"
+          HTTP_CODE=$(curl -s -o response.json -w "%{http_code}" -X POST \
+            "https://management.azure.com/subscriptions/51968818-991b-405a-be75-f7b9852c5638/resourceGroups/mcp-servers/providers/Microsoft.ContainerInstance/containerGroups/latex-mcp-server/restart?api-version=2021-09-01" \
+            -H "Authorization: Bearer ${{ secrets.AZURE_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -H "Content-Length: 0" \
+            -d "")
+
+          echo "HTTP Response Code: $HTTP_CODE"
+          cat response.json
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "::error::Container restart failed with HTTP code $HTTP_CODE"
+            exit 1
+          fi
+
+          echo "::notice::Container restarted successfully"
