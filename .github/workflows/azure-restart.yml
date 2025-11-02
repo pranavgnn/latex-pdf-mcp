@@ -1,0 +1,21 @@
+name: Restart Azure Container
+
+on:
+  workflow_run:
+    workflows: ["Publish Docker image"]
+    types:
+      - completed
+    branches:
+      - master
+
+jobs:
+  restart_container:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Azure Container Restart
+        run: |
+          curl -X POST "https://management.azure.com/subscriptions/51968818-991b-405a-be75-f7b9852c5638/resourceGroups/mcp-servers/providers/Microsoft.ContainerInstance/containerGroups/latex-mcp-server/restart?api-version=2021-09-01" \
+          -H "Authorization: Bearer ${{ secrets.AZURE_TOKEN }}" \
+          -H "Content-Type: application/json"
