@@ -20,6 +20,8 @@ from typing import Optional
 PDF_OUTPUT_DIR = Path("/tmp/latex-pdfs")
 PDF_OUTPUT_DIR.mkdir(exist_ok=True)
 
+_base_url = "http://localhost:8000"
+
 
 def filter_compilation_output(output: str) -> str:
     lines = output.split('\n')
@@ -185,10 +187,11 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             output_path, filename = save_pdf(pdf_bytes, arguments.get("filename"))
             
             bib_note = " with bibliography" if bibliography else ""
+            base_url = _base_url
             
             return [TextContent(
                 type="text",
-                text=f"PDF{bib_note} compiled successfully!\n\nFile saved to: {output_path}\nSize: {len(pdf_bytes)} bytes\n\nFetch this URL and save the response to a PDF file:\n\nhttp://localhost:8000/download/{filename}\n\nTerminal command:\ncurl -o {filename} http://localhost:8000/download/{filename}"
+                text=f"PDF{bib_note} compiled successfully!\n\nFile saved to: {output_path}\nSize: {len(pdf_bytes)} bytes\n\nFetch this URL and save the response to a PDF file:\n\n{base_url}/download/{filename}\n\nTerminal command:\ncurl -o {filename} {base_url}/download/{filename}"
             )]
         except Exception as e:
             return [TextContent(type="text", text=f"Error: {str(e)}")]
@@ -238,8 +241,24 @@ sse = SseServerTransport("/messages")
 
 
 async def mcp_app(scope, receive, send):
+    global _base_url
+    
     if scope["type"] == "http":
         path = scope["path"]
+        
+        headers = dict(scope.get("headers", []))
+        host = headers.get(b"host", b"localhost:8000").decode("utf-8")
+        scheme = scope.get("scheme", "http")
+        
+        forwarded_proto = headers.get(b"x-forwarded-proto")
+        forwarded_host = headers.get(b"x-forwarded-host")
+        
+        if forwarded_proto:
+            scheme = forwarded_proto.decode("utf-8")
+        if forwarded_host:
+            host = forwarded_host.decode("utf-8")
+        
+        _base_url = f"{scheme}://{host}"
         
         if path == "/sse":
             async with sse.connect_sse(scope, receive, send) as streams:
